@@ -5,7 +5,7 @@ import { useState } from "react";
 import PageHero from "@/components/PageHero";
 import axios from "axios";
 import { toast } from "sonner";
-import nodemailer from "nodemailer"; // Ensure you have nodemailer installed
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -30,41 +30,16 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
     setIsSubmitted(true);
     try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: true,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+      const res = await fetch("/api/contact/sendMail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        debug: true, // Enable debug mode
+        body: JSON.stringify(formData),
       });
-
-      const mailOptions = {
-        from: process.env.SMTP_USER,
-        to: `${formData.email}, wandertribe@outlook.com`, // Replace with your marketing team's email
-        subject: "New Contact Form Submission",
-        html: formData.message,
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully");
-    } catch (error) {
-      console.error("Error:", error);
-      console.log(
-        "Failed to send email. Please check your SMTP configuration and ensure the environment variables are set correctly."
-      );
-      toast.error("Failed to send email. Please try again later.", {
-        position: "bottom-right",
-      });
-    }
-
-    try {
-      const res = await fetch(
+      const res1 = await fetch(
         "https://echoedtech.vercel.app/api/contact/sendMail2  ",
         {
           method: "POST",
@@ -74,34 +49,30 @@ const Contact = () => {
           body: JSON.stringify(formData),
         }
       );
-
-      console.log("Response status:", res.status);
-
-      // Parse the response
+      const responseData1 = await res1.json();
       const responseData = await res.json();
-      console.log("Response data:", responseData);
-
-      if (res.ok) {
+      if (res1.ok) {
         toast.success(`Mail sent successfully!`, {
           position: "bottom-right",
         });
-
-        // Reset form data on success
-        setFormData({
-          email: "",
-          message: "",
-          name: "",
-          subject: "",
-          phone: "",
-        });
-      } else {
-        // Handle API errors
-        toast.error(`Error: ${responseData.error || "Failed to send mail"}`, {
-          position: "bottom-right",
-        });
+        if (res.ok) {
+          toast.success(`Mail sent successfully!`, {
+            position: "bottom-right",
+          });
+          setFormData({
+            email: "",
+            message: "",
+            name: "",
+            subject: "",
+            phone: "",
+          });
+        } else {
+          toast.error(`Error: ${responseData.error || "Failed to send mail"}`, {
+            position: "bottom-right",
+          });
+        }
       }
     } catch (error: any) {
-      console.log("Network or parsing error:", error.message);
       toast.error(`Network error: ${error.message}`, {
         position: "bottom-right",
       });
