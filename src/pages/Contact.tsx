@@ -1,48 +1,85 @@
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
-import PageHero from '@/components/PageHero';
-import axios from 'axios';
-import { toast } from 'sonner';
-
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import PageHero from "@/components/PageHero";
+import axios from "axios";
+import { toast } from "sonner";
+import nodemailer from "nodemailer"; // Ensure you have nodemailer installed
 const Contact = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    console.log("Form submitted:", formData);
     setIsSubmitted(true);
-
     try {
-      const res = await fetch("https://echoedtech.vercel.app/api/contact/sendMail2  ", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: true,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
         },
-        body: JSON.stringify(formData),
+        debug: true, // Enable debug mode
       });
 
-      console.log('Response status:', res.status);
+      const mailOptions = {
+        from: process.env.SMTP_USER,
+        to: `${formData.email}, wandertribe@outlook.com`, // Replace with your marketing team's email
+        subject: "New Contact Form Submission",
+        html: formData.message,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      console.log(
+        "Failed to send email. Please check your SMTP configuration and ensure the environment variables are set correctly."
+      );
+      toast.error("Failed to send email. Please try again later.", {
+        position: "bottom-right",
+      });
+    }
+
+    try {
+      const res = await fetch(
+        "https://echoedtech.vercel.app/api/contact/sendMail2  ",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      console.log("Response status:", res.status);
 
       // Parse the response
       const responseData = await res.json();
-      console.log('Response data:', responseData);
+      console.log("Response data:", responseData);
 
       if (res.ok) {
         toast.success(`Mail sent successfully!`, {
@@ -55,11 +92,11 @@ const Contact = () => {
           message: "",
           name: "",
           subject: "",
-          phone: ""
+          phone: "",
         });
       } else {
         // Handle API errors
-        toast.error(`Error: ${responseData.error || 'Failed to send mail'}`, {
+        toast.error(`Error: ${responseData.error || "Failed to send mail"}`, {
           position: "bottom-right",
         });
       }
@@ -72,7 +109,6 @@ const Contact = () => {
       setIsSubmitted(false);
     }
   };
-
 
   return (
     <div className="min-h-screen">
@@ -88,13 +124,14 @@ const Contact = () => {
         <div className="container-custom">
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-travel-earth"></h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            </p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto"></p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-16">
             <div className="lg:col-span-2 bg-travel-cloud-white rounded-lg shadow-md p-8">
-              <h2 className="text-2xl font-bold mb-6 text-travel-earth">Get In Touch</h2>
+              <h2 className="text-2xl font-bold mb-6 text-travel-earth">
+                Get In Touch
+              </h2>
 
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -117,9 +154,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Email Us</h3>
-                    <p className="text-gray-600">
-                      info@wandertribe.co.in
-                    </p>
+                    <p className="text-gray-600">info@wandertribe.co.in</p>
                   </div>
                 </div>
 
@@ -129,9 +164,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Call Us</h3>
-                    <p className="text-gray-600">
-                      +91 9326412687
-                    </p>
+                    <p className="text-gray-600">+91 9326412687</p>
                   </div>
                 </div>
 
@@ -142,7 +175,8 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">Office Hours</h3>
                     <p className="text-gray-600">
-                      Monday-Friday: 9:00 AM - 6:00 PM PST<br />
+                      Monday-Friday: 9:00 AM - 6:00 PM PST
+                      <br />
                       Saturday: 10:00 AM - 4:00 PM PST
                     </p>
                   </div>
@@ -151,18 +185,25 @@ const Contact = () => {
             </div>
 
             <div className="lg:col-span-3 bg-travel-cloud-white rounded-lg shadow-md p-8">
-              <h2 className="text-2xl font-bold mb-6 text-travel-earth">Send a Message</h2>
+              <h2 className="text-2xl font-bold mb-6 text-travel-earth">
+                Send a Message
+              </h2>
 
               {isSubmitted ? (
                 <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-6 text-center">
                   <h3 className="text-xl font-semibold mb-2">Thank You!</h3>
-                  <p>Your message has been sent successfully. One of our travel experts will be in touch with you shortly.</p>
+                  <p>
+                    Your message has been sent successfully. One of our travel
+                    experts will be in touch with you shortly.
+                  </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label className="block text-gray-700 font-medium mb-2" htmlFor="name">
+                      <label
+                        className="block text-gray-700 font-medium mb-2"
+                        htmlFor="name">
                         Your Name
                       </label>
                       <input
@@ -177,7 +218,9 @@ const Contact = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 font-medium mb-2" htmlFor="email">
+                      <label
+                        className="block text-gray-700 font-medium mb-2"
+                        htmlFor="email">
                         Your Email
                       </label>
                       <input
@@ -192,7 +235,9 @@ const Contact = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 font-medium mb-2" htmlFor="phone">
+                      <label
+                        className="block text-gray-700 font-medium mb-2"
+                        htmlFor="phone">
                         Phone Number
                       </label>
                       <input
@@ -206,7 +251,9 @@ const Contact = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 font-medium mb-2" htmlFor="subject">
+                      <label
+                        className="block text-gray-700 font-medium mb-2"
+                        htmlFor="subject">
                         Subject
                       </label>
                       <select
@@ -215,20 +262,27 @@ const Contact = () => {
                         value={formData.subject}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-travel-teal"
-                        required
-                      >
+                        required>
                         <option value="">Select a subject</option>
                         <option value="Trip Inquiry">Trip Inquiry</option>
-                        <option value="Booking Question">Booking Question</option>
-                        <option value="Custom Itinerary">Custom Itinerary</option>
-                        <option value="General Question">General Question</option>
+                        <option value="Booking Question">
+                          Booking Question
+                        </option>
+                        <option value="Custom Itinerary">
+                          Custom Itinerary
+                        </option>
+                        <option value="General Question">
+                          General Question
+                        </option>
                         <option value="Feedback">Feedback</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="mb-6">
-                    <label className="block text-gray-700 font-medium mb-2" htmlFor="message">
+                    <label
+                      className="block text-gray-700 font-medium mb-2"
+                      htmlFor="message">
                       Your Message
                     </label>
                     <textarea
@@ -238,14 +292,12 @@ const Contact = () => {
                       onChange={handleChange}
                       rows={5}
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-travel-teal"
-                      required
-                    ></textarea>
+                      required></textarea>
                   </div>
 
                   <button
                     type="submit"
-                    className="bg-travel-teal hover:bg-travel-earth text-travel-cloud-white font-medium py-3 px-6 rounded-md transition-colors w-full"
-                  >
+                    className="bg-travel-teal hover:bg-travel-earth text-travel-cloud-white font-medium py-3 px-6 rounded-md transition-colors w-full">
                     Send Message
                   </button>
                 </form>
@@ -254,14 +306,14 @@ const Contact = () => {
           </div>
 
           <div className="bg-travel-cloud-white rounded-lg shadow-md overflow-hidden h-96">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7531.787612610198!2d72.94541208623305!3d19.286983737784173!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7bb0324914c3f%3A0xb21bc2c2e8a8363c!2sRosa%20Elite%20A%20CHSL!5e0!3m2!1sen!2sin!4v1745953734660!5m2!1sen!2sin"
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7531.787612610198!2d72.94541208623305!3d19.286983737784173!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7bb0324914c3f%3A0xb21bc2c2e8a8363c!2sRosa%20Elite%20A%20CHSL!5e0!3m2!1sen!2sin!4v1745953734660!5m2!1sen!2sin"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+              referrerPolicy="no-referrer-when-downgrade"></iframe>
           </div>
         </div>
       </div>
